@@ -159,7 +159,7 @@ resource "aws_lb_target_group" "network_targets" {
 
 # S3 Bucket
 resource "aws_s3_bucket" "private_bucket" {
-  bucket = "private-bucket-srihari"
+  bucket = "private-bucket-srihari-unique"
 }
 
 resource "aws_s3_bucket_versioning" "private_bucket_versioning" {
@@ -168,10 +168,4 @@ resource "aws_s3_bucket_versioning" "private_bucket_versioning" {
   versioning_configuration {
     status = "Enabled"
   }
-}
-
-# IAM Role for S3 Access
-resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
-  role       = "CCL-S3-CRR-Role" # Using your specified S3 role
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess" # Ensure this policy grants full access to the S3 bucket
 }
