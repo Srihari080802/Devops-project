@@ -94,7 +94,7 @@ resource "aws_launch_template" "public_instance" {
   instance_type = "t2.micro"
   image_id      = "ami-055e3d4f0bbeb5878" # Amazon Linux 2 AMI
   iam_instance_profile {
-    name = aws_iam_instance_profile.public_role.name
+    name = "CCL-EC2-ROLE" # Using your specified IAM role
   }
   vpc_security_group_ids = [aws_security_group.public_sg.id]
 }
@@ -162,11 +162,6 @@ resource "aws_s3_bucket" "private_bucket" {
   bucket = "private-bucket-srihari"
 }
 
-resource "aws_s3_bucket_acl" "private_bucket_acl" {
-  bucket = aws_s3_bucket.private_bucket.bucket
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "private_bucket_versioning" {
   bucket = aws_s3_bucket.private_bucket.bucket
 
@@ -175,42 +170,8 @@ resource "aws_s3_bucket_versioning" "private_bucket_versioning" {
   }
 }
 
-# IAM Role
-resource "aws_iam_role" "public_role" {
-  name               = "public-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action    = "sts:AssumeRole",
-        Effect    = "Allow",
-        Principal = { Service = "ec2.amazonaws.com" }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_policy" "s3_access" {
-  name        = "s3-access"
-  description = "Full access to the S3 bucket"
-  policy      = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action   = ["s3:*"],
-        Effect   = "Allow",
-        Resource = [aws_s3_bucket.private_bucket.arn, "${aws_s3_bucket.private_bucket.arn}/*"]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "attach_policy" {
-  role       = aws_iam_role.public_role.name
-  policy_arn = aws_iam_policy.s3_access.arn
-}
-
-resource "aws_iam_instance_profile" "public_role" {
-  name = "public-instance-profile"
-  role = aws_iam_role.public_role.name
+# IAM Role for S3 Access
+resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
+  role       = "CCL-S3-CRR-Role" # Using your specified S3 role
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess" # Ensure this policy grants full access to the S3 bucket
 }
