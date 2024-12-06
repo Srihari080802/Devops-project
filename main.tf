@@ -111,7 +111,7 @@ resource "aws_autoscaling_group" "public_asg" {
 }
 
 resource "aws_instance" "private_instance" {
-  image_id      = "ami-055e3d4f0bbeb5878"
+  ami           = "ami-055e3d4f0bbeb5878"
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.private[0].id
   security_groups = [aws_security_group.private_sg.name]
@@ -160,6 +160,10 @@ resource "aws_lb_target_group" "network_targets" {
 # S3 Bucket
 resource "aws_s3_bucket" "private_bucket" {
   bucket = "private-bucket-srihari"
+}
+
+resource "aws_s3_bucket_acl" "private_bucket_acl" {
+  bucket = aws_s3_bucket.private_bucket.bucket
   acl    = "private"
 }
 
