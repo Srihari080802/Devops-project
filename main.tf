@@ -92,11 +92,11 @@ resource "aws_security_group" "private_sg" {
 resource "aws_launch_template" "public_instance" {
   name          = "public-instance-template"
   instance_type = "t2.micro"
-  ami           = "ami-055e3d4f0bbeb5878" # Amazon Linux 2 AMI
+  image_id      = "ami-055e3d4f0bbeb5878" # Amazon Linux 2 AMI
   iam_instance_profile {
     name = aws_iam_instance_profile.public_role.name
   }
-  security_group_ids = [aws_security_group.public_sg.id]
+  vpc_security_group_ids = [aws_security_group.public_sg.id]
 }
 
 resource "aws_autoscaling_group" "public_asg" {
@@ -111,7 +111,7 @@ resource "aws_autoscaling_group" "public_asg" {
 }
 
 resource "aws_instance" "private_instance" {
-  ami           = "ami-055e3d4f0bbeb5878"
+  image_id      = "ami-055e3d4f0bbeb5878"
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.private[0].id
   security_groups = [aws_security_group.private_sg.name]
@@ -161,8 +161,13 @@ resource "aws_lb_target_group" "network_targets" {
 resource "aws_s3_bucket" "private_bucket" {
   bucket = "private-bucket-srihari"
   acl    = "private"
-  versioning {
-    enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "private_bucket_versioning" {
+  bucket = aws_s3_bucket.private_bucket.bucket
+
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
