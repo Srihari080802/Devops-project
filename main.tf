@@ -94,7 +94,7 @@ resource "aws_launch_template" "public_instance" {
   instance_type = "t2.micro"
   image_id      = "ami-055e3d4f0bbeb5878" # Amazon Linux 2 AMI
   iam_instance_profile {
-    name = aws_iam_instance_profile.public_role.name
+    name = "CCL-EC2-ROLE" # Using your specified IAM role
   }
   vpc_security_group_ids = [aws_security_group.public_sg.id]
 }
@@ -111,10 +111,10 @@ resource "aws_autoscaling_group" "public_asg" {
 }
 
 resource "aws_instance" "private_instance" {
-  ami                    = "ami-055e3d4f0bbeb5878"
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.private[0].id
-  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  ami           = "ami-055e3d4f0bbeb5878"
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.private[0].id
+  security_groups = [aws_security_group.private_sg.name]
 }
 
 # Load Balancers
@@ -159,49 +159,19 @@ resource "aws_lb_target_group" "network_targets" {
 
 # S3 Bucket
 resource "aws_s3_bucket" "private_bucket" {
-  bucket = "private-bucket-srihari-unique"
-  acl    = "private"
-  versioning {
-    enabled = true
+  bucket = "private-bucket-srihari"
+}
+
+resource "aws_s3_bucket_versioning" "private_bucket_versioning" {
+  bucket = aws_s3_bucket.private_bucket.bucket
+
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-# IAM Role
-resource "aws_iam_role" "public_role" {
-  name               = "public-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action    = "sts:AssumeRole",
-        Effect    = "Allow",
-        Principal = { Service = "ec2.amazonaws.com" }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_policy" "s3_access" {
-  name        = "s3-access"
-  description = "Full access to the S3 bucket"
-  policy      = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action   = ["s3:*"],
-        Effect   = "Allow",
-        Resource = [aws_s3_bucket.private_bucket.arn, "${aws_s3_bucket.private_bucket.arn}/*"]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "attach_policy" {
-  role       = aws_iam_role.public_role.name
-  policy_arn = aws_iam_policy.s3_access.arn
-}
-
-resource "aws_iam_instance_profile" "public_role" {
-  name = "public-instance-profile"
-  role = aws_iam_role.public_role.name
+# IAM Role for S3 Access
+resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
+  role       = "CCL-S3-CRR-Role" # Using your specified S3 role
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess" # Ensure this policy grants full access to the S3 bucket
 }
