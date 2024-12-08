@@ -17,7 +17,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count = 2
+  count = 1
   vpc_id            = aws_vpc.main.id
   cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 4, 2 + count.index)
   availability_zone = ["us-west-2a", "us-west-2b"][count.index]
